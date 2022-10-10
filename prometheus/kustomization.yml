@@ -1,0 +1,18 @@
+---
+helmCharts:
+- name: prometheus
+  repo: https://prometheus-community.github.io/helm-charts
+  releaseName: my-prometheus
+  namespace: prometheus
+  valuesInline:
+    pushgateway:
+      enabled: false
+    alertmanager:
+      enabled: false
+  valuesFile: https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/prometheus/extraScrapeConfigs.yaml
+resources:
+- namespace.yml
+generatorOptions:
+ disableNameSuffixHash: true
+patchesStrategicMerge:
+  - ValueOverrides.yml
