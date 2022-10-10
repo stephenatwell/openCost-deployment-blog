@@ -1,0 +1,89 @@
+
+version: v1
+kind: kubernetes
+application: Open Cost # The name of the application to deploy.
+targets:
+    First-Cluster: 
+        # the name of an agent configured account
+        account: demo-prod-west-cluster
+        # Optionally override the namespaces that are in the manifests
+        namespace: opencost
+        # This is the key to a strategy under the strategies map
+        strategy: opencost
+        constraints:
+          dependsOn: ["prometheus"]
+    prometheus: 
+        # the name of an agent configured account
+        account: demo-prod-west-cluster
+        # Optionally override the namespaces that are in the manifests
+        namespace: prometheus
+        # This is the key to a strategy under the strategies map
+        strategy: prometheus
+
+# The list of manifest sources. Can be a directory or file.
+manifests:
+    - path: prometheus/manifests.yml
+      targets: [prometheus]
+    - path: firstCluster/manifests.yml
+      targets: [First-Cluster]
+strategies: # A map of named strategies that can be assigned to deployment targets in the targets block.
+  opencost:
+    # strategy to use when deploying opencost.
+    canary: 
+        # List of canary steps
+        steps:
+          # The map key is the step type
+          - setWeight:
+              weight: 100
+          - analysis: # optional: check some monitoring queires to ensure applicaiton appears healthy. Rollback if they fail.
+              interval: 30
+              units: seconds
+              numberOfJudgmentRuns: 1
+              rollBackMode: manual
+              queries:
+              - avgCPUUsage
+  prometheus:
+    # strategy to use when deploying prometheus.
+    canary: 
+        # List of canary steps
+        steps:
+          # The map key is the step type
+          - setWeight:
+              weight: 100
+          - analysis: # optional: check some monitoring queires to ensure applicaiton appears healthy. Rollback if they fail.
+              interval: 30
+              units: seconds
+              numberOfJudgmentRuns: 1
+              rollBackMode: manual
+              queries:
+              - avgCPUUsage
+              - alerts
+              - isNodeExporterUp       
+  rolling:
+    canary:
+      steps: 
+      - setWeight:
+          weight: 100
+
+analysis:  # Canary analysis queries and thresholds
+  defaultMetricProviderName: Stephen-Prometheus
+  queries:
+    - name: avgCPUUsage
+      upperLimit: 70 #3
+      lowerLimit: 0
+      #used to be metric container_cpu_system_seconds_total now is metric container_cpu_usage_seconds_total
+      queryTemplate: >-
+        avg (avg_over_time(container_cpu_usage_seconds_total{job="kubelet"}[{{armory.promQlStepInterval}}]) * on (pod)  group_left (annotation_app)
+        sum(kube_pod_annotations{job="kube-state-metrics",annotation_deploy_armory_io_deployment_id="{{armory.deploymentId}}"})
+        by (annotation_app, pod))
+    - name: alerts
+      upperLimit: 1 #3
+      lowerLimit: 0
+      queryTemplate: >-
+        avg (avg_over_time(alertmanager_alerts{job="prometheus-kube-prometheus-alertmanager",namespace="borealis-demo-infra"}[{{armory.promQlStepInterval}}]))
+    - name: isNodeExporterUp
+      upperLimit: 45000 #3
+      lowerLimit: 0
+      #used to be metric container_cpu_system_seconds_total now is metric container_cpu_usage_seconds_total
+      queryTemplate: >-
+        avg (avg_over_time(up{job="node-exporter"}[{{armory.promQlStepInterval}}]))
