@@ -12,3 +12,8 @@ configMapGenerator:
     - PROMETHEUS_SERVER_ENDPOINT=http://my-prometheus-server.prometheus.svc
     - CLOUD_PROVIDER_API_KEY=AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U # The GCP Pricing API requires a key. This is supplied just for evaluation.
     - CLUSTER_ID=cluster-one # the default cluster id.
+  - name: opencost-ui-config
+    literals:
+    name: BASE_URL
+    value: http://localhost:9003/allocation #Override this to the URL at which a client computer viewing the UI can access ther opencost cost model, which is served my a different container in this pod on port 9003.
+          
