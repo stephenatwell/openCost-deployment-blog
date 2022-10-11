@@ -4,6 +4,7 @@ generatorOptions:
 namespace: opencost
 resources:
 - https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml
+- ui-service.yml
 patchesStrategicMerge:
   - ValueOverrides.yml
 configMapGenerator:
