@@ -27,7 +27,7 @@ strategies: # How the code will be deployed.
               duration: 20
               unit: seconds
           - analysis: # optional: check some monitoring queries to ensure applicaiton appears healthy. Rollback if they fail.
-              interval: 5
+              interval: 20
               units: seconds
               numberOfJudgmentRuns: 1
               rollBackMode: manual
