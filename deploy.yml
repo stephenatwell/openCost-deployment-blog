@@ -64,7 +64,7 @@ strategies: # How the code will be deployed.
           weight: 100
 
 analysis:  # Canary analysis queries and thresholds
-  defaultMetricProviderName: Kubecost-Prometheus
+  defaultMetricProviderName: opencost-Prometheus
   queries:
     - name: memory_allocation_gb
       lowerLimit: 0
