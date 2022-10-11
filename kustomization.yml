@@ -1,3 +1,4 @@
+#delete the helmcharts if you do not want to deploy prometheus
 helmCharts:
 - name: prometheus
   repo: https://prometheus-community.github.io/helm-charts
@@ -9,6 +10,7 @@ helmCharts:
     alertmanager:
       enabled: false
   valuesFile: https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/prometheus/extraScrapeConfigs.yaml
+  
 generatorOptions:
  disableNameSuffixHash: true
 namespace: opencost
@@ -16,6 +18,7 @@ resources:
 - https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml
 - ui-service.yml
 patchesStrategicMerge:
+#delete prometheus-overrides.yml if you do not want to deploy prometheus
   - prometheus-overrides.yml
   - opencost-overrides.yml
 configMapGenerator:
