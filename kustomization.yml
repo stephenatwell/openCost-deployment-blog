@@ -16,7 +16,8 @@ resources:
 - https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml
 - ui-service.yml
 patchesStrategicMerge:
-  - ValueOverrides.yml
+  - prometheus-overrides.yml
+  - opencost-overrides.yml
 configMapGenerator:
   - name: opencost-config
     literals:
