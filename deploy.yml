@@ -18,6 +18,7 @@ targets:
 # Specifies which Kubernetes manifests should be deployed to targets.
 manifests:
     - path: manifests.yml
+    
 strategies: # How the code will be deployed.
   opencost:
     # strategy to use when deploying opencost. This deploys opencost, waits for a scrape interval, then confirms cost data is reaching prometheus. 
