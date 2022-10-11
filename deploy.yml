@@ -27,7 +27,7 @@ strategies: # How the code will be deployed.
               duration: 20
               unit: seconds
           - analysis: # optional: check some monitoring queries to ensure applicaiton appears healthy. Rollback if they fail.
-              interval: 20
+              interval: 60
               units: seconds
               numberOfJudgmentRuns: 1
               rollBackMode: manual
@@ -36,6 +36,8 @@ strategies: # How the code will be deployed.
               - node_ram_hourly_cost
               - node_total_hourly_cost
               - memory_allocation_gb  
+              - monthly_cost_currently_provisioned_nodes
+              - max_container_cost
 
 analysis:  # Canary analysis queries and thresholds
   defaultMetricProviderName: opencost-Prometheus
@@ -55,4 +57,11 @@ analysis:  # Canary analysis queries and thresholds
     - name: node_cpu_hourly_cost
       lowerLimit: 0
       queryTemplate: >-
-        sum (node_cpu_hourly_cost * 730)
+        sum (node_cpu_hourly_cost * 730)        
+    - name: monthly_cost_currently_provisioned_nodes
+      lowerLimit: 0
+      queryTemplate: >-
+        sum(node_total_hourly_cost) * 730
+    - name: max_container_cost
+      lowerLimit: 0
+      queryTemplate: max(avg_over_time(container_memory_allocation_bytes{}[{{armory.promQlStepInterval}}])* on(instance) group_left() node_ram_hourly_cost  / 1024 / 1024 / 1024 * 730+avg_over_time(container_cpu_allocation[{{armory.promQlStepInterval}}]) * on(instance) group_left() node_cpu_hourly_cost * 730)
