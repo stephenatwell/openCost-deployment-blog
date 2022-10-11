@@ -32,29 +32,4 @@ spec:
         envFrom:
         - configMapRef:
             name: opencost-ui-config 
-        
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: my-prometheus-server
-  namespace: opencost
-spec:
-  accessModes:
-  - ReadWriteMany # cannot mount a readwriteOnce volume when doing a canary deployment strategy. need to with use ReadWriteMany, or switch to the prometheus operator.
----
-#Replace the persistent volume claim with an empty dir for clusters that are not setup for ReadWriteMany
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: my-prometheus-server
-  namespace: opencost
-spec:
-  template:
-    spec:
-      volumes:
-      - name: storage-volume
-        emptyDir: {} 
-        persistentVolumeClaim:
-          $patch: delete
           
