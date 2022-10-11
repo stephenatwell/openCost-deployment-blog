@@ -1,0 +1,27 @@
+name: Deploy my latest version
+on: 
+  push: 
+    branches:
+      - main 
+jobs:
+  build:
+    name: deploy from main
+    runs-on: ubuntu-latest
+    steps:
+      - name: installHelm
+        uses: yokawasa/action-setup-kube-tools@v0.7.1
+        with:
+          helm: '3.9.2'
+          kustomize: '4.5.7'  
+      - name: Checkout code
+        uses: actions/checkout@v2 
+      - name: buildPrometheus
+        run: kustomize build --enable-helm prometheus > prometheus/manifests.yml
+      - name: buildOpenCost
+        run: kustomize build --enable-helm opencost > opencost/manifests.yml
+      - name: Deployment
+        uses: armory/cli-deploy-action@main
+        with:
+          clientId: "${{ secrets.CDAAS_CLIENT_ID }}"
+          clientSecret:  "${{ secrets.CDAAS_CLIENT_SECRET }}"
+          path-to-file: "/deploy.yml"
