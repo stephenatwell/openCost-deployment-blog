@@ -9,8 +9,6 @@ helmCharts:
     alertmanager:
       enabled: false
   valuesFile: https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/prometheus/extraScrapeConfigs.yaml
-  
----
 generatorOptions:
  disableNameSuffixHash: true
 namespace: opencost
