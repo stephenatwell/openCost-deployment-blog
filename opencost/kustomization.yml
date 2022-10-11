@@ -14,6 +14,5 @@ configMapGenerator:
     - CLUSTER_ID=cluster-one # the default cluster id.
   - name: opencost-ui-config
     literals:
-    name: BASE_URL
-    value: http://localhost:9003/allocation #Override this to the URL at which a client computer viewing the UI can access ther opencost cost model, which is served my a different container in this pod on port 9003. This will not work until this PR merges: https://github.com/opencost/opencost/pull/1417
+    - BASE_URL=http://localhost:9003/allocation #Override this to the URL at which a client computer viewing the UI can access ther opencost cost model, which is served my a different container in this pod on port 9003. This will not work until this PR merges: https://github.com/opencost/opencost/pull/1417
           
