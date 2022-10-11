@@ -18,7 +18,7 @@ resources:
 - https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml
 - ui-service.yml
 patchesStrategicMerge:
-#delete prometheus-overrides.yml if you do not want to deploy prometheus
+  #delete prometheus-overrides.yml if you do not want to deploy prometheus
   - prometheus-overrides.yml
   - opencost-overrides.yml
 configMapGenerator:
