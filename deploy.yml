@@ -1,64 +1,64 @@
 
 version: v1
 kind: kubernetes
-application: Open Cost # The name of the application to deploy.
+application: OpenCost + Prometheus # The name of the application to deploy.
 targets:
-    First-Cluster: 
-        # the name of an agent configured account
+    #where to deploy code, and in what order. Specifies accounts and namespaces for each application.
+    production: 
         account: demo-prod-west-cluster
-        # Optionally override the namespaces that are in the manifests
         namespace: opencost
-        # This is the key to a strategy under the strategies map
         strategy: opencost
         constraints:
-          dependsOn: ["prometheus"]
-    prometheus: 
-        # the name of an agent configured account
+          dependsOn: ["prometheus-production"]
+    prometheus-production: 
         account: demo-prod-west-cluster
-        # Optionally override the namespaces that are in the manifests
         namespace: prometheus
-        # This is the key to a strategy under the strategies map
         strategy: prometheus
 
-# The list of manifest sources. Can be a directory or file.
+# Specifies which Kubernetes manifests should be deployed to targets.
 manifests:
     - path: prometheus/manifests.yml
-      targets: [prometheus]
-    - path: firstCluster/manifests.yml
-      targets: [First-Cluster]
-strategies: # A map of named strategies that can be assigned to deployment targets in the targets block.
+      targets: [prometheus-production]
+    - path: opencost/manifests.yml
+      targets: [production]
+strategies: # How the code will be deployed.
   opencost:
-    # strategy to use when deploying opencost.
+    # strategy to use when deploying opencost. This deploys opencost, waits for a scrape interval, then confirms cost data is reaching prometheus. 
+    # This simple test attempts to validate openCost is working following an upgrade.
     canary: 
         # List of canary steps
         steps:
           # The map key is the step type
           - setWeight:
               weight: 100
-          - analysis: # optional: check some monitoring queires to ensure applicaiton appears healthy. Rollback if they fail.
-              interval: 30
+          - pause:  # lets make sure some scrapes have run...
+              duration: 20
+              unit: seconds
+          - analysis: # optional: check some monitoring queries to ensure applicaiton appears healthy. Rollback if they fail.
+              interval: 5
               units: seconds
               numberOfJudgmentRuns: 1
               rollBackMode: manual
-              queries:
-              - avgCPUUsage
+              queries: # ensure kubecost cost data is queriable within prometheus
+              - node_cpu_hourly_cost
+              - node_ram_hourly_cost
+              - node_total_hourly_cost
   prometheus:
-    # strategy to use when deploying prometheus.
+    # strategy to use when deploying prometheus. It tests that the prometheus-only part of the openCost example queries is working, so that if something affecting openCost breaks during a prometheus upgrade it can be detected.
     canary: 
-        # List of canary steps
         steps:
-          # The map key is the step type
           - setWeight:
               weight: 100
-          - analysis: # optional: check some monitoring queires to ensure applicaiton appears healthy. Rollback if they fail.
-              interval: 30
+          - pause: # lets make sure some scrapes have run...
+              duration: 20
+              unit: seconds
+          - analysis: # optional: check some monitoring queires to ensure application appears healthy. Rollback if they fail.
+              interval: 60
               units: seconds
               numberOfJudgmentRuns: 1
               rollBackMode: manual
-              queries:
-              - avgCPUUsage
-              - alerts
-              - isNodeExporterUp       
+              queries: # ensure the portion of the example kubecost queries that prometheus natively provides are working...
+              - memory_allocation_gb  
   rolling:
     canary:
       steps: 
@@ -66,24 +66,21 @@ strategies: # A map of named strategies that can be assigned to deployment targe
           weight: 100
 
 analysis:  # Canary analysis queries and thresholds
-  defaultMetricProviderName: Stephen-Prometheus
+  defaultMetricProviderName: Kubecost-Prometheus
   queries:
-    - name: avgCPUUsage
-      upperLimit: 70 #3
+    - name: memory_allocation_gb
       lowerLimit: 0
-      #used to be metric container_cpu_system_seconds_total now is metric container_cpu_usage_seconds_total
-      queryTemplate: >-
-        avg (avg_over_time(container_cpu_usage_seconds_total{job="kubelet"}[{{armory.promQlStepInterval}}]) * on (pod)  group_left (annotation_app)
-        sum(kube_pod_annotations{job="kube-state-metrics",annotation_deploy_armory_io_deployment_id="{{armory.deploymentId}}"})
-        by (annotation_app, pod))
-    - name: alerts
-      upperLimit: 1 #3
+      queryTemplate:
+        sum(avg_over_time(container_memory_allocation_bytes{}[{{armory.promQlStepInterval}}]))/1024/1024/1024
+    - name: node_total_hourly_cost
       lowerLimit: 0
       queryTemplate: >-
-        avg (avg_over_time(alertmanager_alerts{job="prometheus-kube-prometheus-alertmanager",namespace="borealis-demo-infra"}[{{armory.promQlStepInterval}}]))
-    - name: isNodeExporterUp
-      upperLimit: 45000 #3
+        sum (node_total_hourly_cost * 730)   
+    - name: node_ram_hourly_cost
       lowerLimit: 0
-      #used to be metric container_cpu_system_seconds_total now is metric container_cpu_usage_seconds_total
       queryTemplate: >-
-        avg (avg_over_time(up{job="node-exporter"}[{{armory.promQlStepInterval}}]))
+        sum (node_ram_hourly_cost * 730)
+    - name: node_cpu_hourly_cost
+      lowerLimit: 0
+      queryTemplate: >-
+        sum (node_cpu_hourly_cost * 730)

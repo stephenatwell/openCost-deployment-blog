@@ -21,21 +21,16 @@ spec:
       - name: ui
         image: timbru31/node-alpine-git:latest
         command: ["/bin/sh","-c","git clone https://github.com/opencost/opencost.git && cd opencost/ui && ls && npm install; npx parcel src/index.html"]
+        #command: ["/bin/sh","-c","git clone https://github.com/stephenatwell/opencost-uiconfigurability.git && cd opencost-uiconfigurability/ui && ls && npm install; npx parcel src/index.html"]        
         ports:
         - containerPort: 1234
         readinessProbe:
           tcpSocket:
             port: 1234
           initialDelaySeconds: 5
-          periodSeconds: 10 
-     #- name: port-changer
-     #   image: marcnuri/port-forward:latest
-     #   env:
-     #   - name: REMOTE_HOST
-     #     value: localhost
-     #   - name: REMOTE_PORT
-     #     value: "9003"
-     #   - name: LOCAL_PORT
-     #     value: "9090"
+          periodSeconds: 10
+        env:
+        - name: BASE_URL
+          value: http://localhost:9003/allocation #OVerride this to the URL at which a client computer viewing the UI can access ther opencost cost model, which is served my a different container in this pod on port 9003.
           
         
