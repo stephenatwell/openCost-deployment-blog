@@ -21,7 +21,7 @@ spec:
       - name: ui
         image: timbru31/node-alpine-git:latest
         command: ["/bin/sh","-c","git clone https://github.com/opencost/opencost.git && cd opencost/ui && ls && npm install; npx parcel src/index.html"]
-        #command: ["/bin/sh","-c","git clone https://github.com/stephenatwell/opencost-uiconfigurability.git && cd opencost-uiconfigurability/ui && ls && npm install; npx parcel src/index.html"]        
+        #command: ["/bin/sh","-c","git clone https://github.com/stephenatwell/opencost-uiconfigurability.git && cd opencost-uiconfigurability/ui && ls && npm install; npx parcel src/index.html"] # note, this git repo has the fix to allow changing url.... but is not being actively maintained.        
         ports:
         - containerPort: 1234
         readinessProbe:
@@ -29,8 +29,7 @@ spec:
             port: 1234
           initialDelaySeconds: 5
           periodSeconds: 10
-        env:
-        - name: BASE_URL
-          value: http://localhost:9003/allocation #OVerride this to the URL at which a client computer viewing the UI can access ther opencost cost model, which is served my a different container in this pod on port 9003.
-          
+        envFrom:
+        - configMapRef:
+            name: opencost-ui-config 
         
