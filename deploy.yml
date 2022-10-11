@@ -1,7 +1,7 @@
 
 version: v1
 kind: kubernetes
-application: OpenCost + Prometheus # The name of the application to deploy.
+application: OpenCost # The name of the application to deploy.
 targets:
     #where to deploy code, and in what order. Specifies accounts and namespaces for each application.
     production: 
